@@ -20,26 +20,29 @@ import java.util.Locale;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-class StockAdapter extends RecyclerView.Adapter<StockAdapter.StockViewHolder> {
+public class StockAdapter extends RecyclerView.Adapter<StockAdapter.StockViewHolder> {
 
     private final Context context;
     private final DecimalFormat dollarFormatWithPlus;
     private final DecimalFormat dollarFormat;
     private final DecimalFormat percentageFormat;
     private Cursor cursor;
-    private StockAdapterOnClickHandler clickHandler;
+    private final StockAdapterOnClickHandler clickHandler;
 
     StockAdapter(Context context, StockAdapterOnClickHandler clickHandler) {
         this.context = context;
         this.clickHandler = clickHandler;
 
-        dollarFormat = (DecimalFormat) NumberFormat.getCurrencyInstance(Locale.US);
-        dollarFormatWithPlus = (DecimalFormat) NumberFormat.getCurrencyInstance(Locale.US);
-        dollarFormatWithPlus.setPositivePrefix("+$");
-        percentageFormat = (DecimalFormat) NumberFormat.getPercentInstance(Locale.getDefault());
-        percentageFormat.setMaximumFractionDigits(2);
-        percentageFormat.setMinimumFractionDigits(2);
-        percentageFormat.setPositivePrefix("+");
+//        dollarFormat = (DecimalFormat) NumberFormat.getCurrencyInstance(Locale.US);
+//        dollarFormatWithPlus = (DecimalFormat) NumberFormat.getCurrencyInstance(Locale.US);
+//        dollarFormatWithPlus.setPositivePrefix("+$");
+//        percentageFormat = (DecimalFormat) NumberFormat.getPercentInstance(Locale.getDefault());
+//        percentageFormat.setMaximumFractionDigits(2);
+//        percentageFormat.setMinimumFractionDigits(2);
+//        percentageFormat.setPositivePrefix("+");
+        dollarFormat = getDollarFormat();
+        dollarFormatWithPlus = getDollarFormatWithPlus();
+        percentageFormat = getPercentageFormat();
     }
 
     void setCursor(Cursor cursor) {
@@ -102,6 +105,23 @@ class StockAdapter extends RecyclerView.Adapter<StockAdapter.StockViewHolder> {
         return count;
     }
 
+    public static DecimalFormat getDollarFormat() {
+        return (DecimalFormat) NumberFormat.getCurrencyInstance(Locale.US);
+    }
+
+    public static DecimalFormat getDollarFormatWithPlus() {
+        DecimalFormat format = getDollarFormat();
+        format.setPositivePrefix("+$");
+        return format;
+    }
+
+    public static DecimalFormat getPercentageFormat() {
+        DecimalFormat format = (DecimalFormat) NumberFormat.getPercentInstance(Locale.getDefault());
+        format.setMaximumFractionDigits(2);
+        format.setMinimumFractionDigits(2);
+        format.setPositivePrefix("+");
+        return format;
+    }
 
     interface StockAdapterOnClickHandler {
         void onClick(String symbol);
@@ -133,6 +153,6 @@ class StockAdapter extends RecyclerView.Adapter<StockAdapter.StockViewHolder> {
 
         }
 
-
     }
+
 }

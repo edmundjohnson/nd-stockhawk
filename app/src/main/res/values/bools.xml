@@ -1,0 +1,4 @@
+<resources>
+    <!-- Make this false for <v11 if minSdkVersion changes -->
+    <bool name="widget_list_enabled">true</bool>
+</resources>

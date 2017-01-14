@@ -18,27 +18,34 @@ public final class PrefUtils {
     public static Set<String> getStocks(Context context) {
         String stocksKey = context.getString(R.string.pref_stocks_key);
         String initializedKey = context.getString(R.string.pref_stocks_initialized_key);
-        String[] defaultStocksList = context.getResources().getStringArray(R.array.default_stocks);
 
-        HashSet<String> defaultStocks = new HashSet<>(Arrays.asList(defaultStocksList));
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-
 
         boolean initialized = prefs.getBoolean(initializedKey, false);
 
+        // The first time (only) that this method is called, return the default list of stocks.
         if (!initialized) {
+            String[] defaultStocksList = context.getResources().getStringArray(R.array.default_stocks);
+            HashSet<String> defaultStocks = new HashSet<>(Arrays.asList(defaultStocksList));
+
             SharedPreferences.Editor editor = prefs.edit();
             editor.putBoolean(initializedKey, true);
             editor.putStringSet(stocksKey, defaultStocks);
             editor.apply();
             return defaultStocks;
         }
-        return prefs.getStringSet(stocksKey, new HashSet<String>());
 
+        return prefs.getStringSet(stocksKey, new HashSet<String>());
     }
 
+    /**
+     * Add or remove a stock symbol from the stock list stored in the preferences.
+     * @param context the context
+     * @param symbol the stock to add or remove
+     * @param add if true, the stock is added, if false, the stock is removed
+     */
     private static void editStockPref(Context context, String symbol, Boolean add) {
-        String key = context.getString(R.string.pref_stocks_key);
+        String stocksKey = context.getString(R.string.pref_stocks_key);
         Set<String> stocks = getStocks(context);
 
         if (add) {
@@ -49,7 +56,7 @@ public final class PrefUtils {
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         SharedPreferences.Editor editor = prefs.edit();
-        editor.putStringSet(key, stocks);
+        editor.putStringSet(stocksKey, stocks);
         editor.apply();
     }
 
@@ -61,6 +68,12 @@ public final class PrefUtils {
         editStockPref(context, symbol, false);
     }
 
+    /**
+     * Returns the current display mode, which indicates whether the change in stock value is
+     * displayed as an absolute currency amount or as a percentage.
+     * @param context the context
+     * @return the current display mode
+     */
     public static String getDisplayMode(Context context) {
         String key = context.getString(R.string.pref_display_mode_key);
         String defaultValue = context.getString(R.string.pref_display_mode_default);

@@ -1,10 +1,10 @@
 <resources>
     <string name="app_name">Stock Hawk</string>
 
+    <!-- Preferences -->
     <string name="pref_stocks_initialized_key" translatable="false">initialized</string>
 
     <string name="pref_stocks_key">stocks</string>
-
 
     <string name="pref_display_mode_key">displayMode</string>
     <string name="pref_display_mode_default">@string/pref_display_mode_percentage_key</string>
@@ -20,16 +20,23 @@
 
     <string name="action_change_units">@string/pref_display_mode_key</string>
 
+    <string name="addStockDescription">Add a stock to the list</string>
+
 
     <string name="dialog_title">Add Stock</string>
     <string name="dialog_hint">Symbol (e.g. GOOG)</string>
     <string name="dialog_cancel">Cancel</string>
     <string name="dialog_add">Add</string>
 
+    <string name="empty_stock_list">No stock information is available</string>
+
     <string name="error_no_network">No network connectivity! Will load stock cursor when the network is available.</string>
     <string name="error_no_stocks">No stocks added! Hit the floating action button to add one.</string>
 
     <string name="toast_stock_added_no_connectivity">Symbol %s added. Will refresh when network available.</string>
     <string name="toast_no_connectivity">Will refresh when network available.</string>
+
+    <!-- Widget -->
+    <string name="widget_list_title">@string/app_name</string>
 
 </resources>

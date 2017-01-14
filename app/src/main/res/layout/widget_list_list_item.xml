@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Layout for list widget list item for a stock. -->
+<!-- Make the background of our selector a non-transparent color -->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/widget_list_item"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:minHeight="?android:attr/listPreferredItemHeightSmall"
+    android:paddingLeft="@dimen/abc_list_item_padding_horizontal_material"
+    android:paddingRight="@dimen/abc_list_item_padding_horizontal_material"
+    android:orientation="horizontal">
+<!--
+TODO: Move next line into Layout above if necessary
+    android:background="@drawable/touch_selector_white">
+-->
+
+    <!--
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:minHeight="?android:attr/listPreferredItemHeightSmall"
+        android:paddingLeft="@dimen/abc_list_item_padding_horizontal_material"
+        android:paddingRight="@dimen/abc_list_item_padding_horizontal_material"
+        android:orientation="horizontal"
+        >
+        -->
+
+    <TextView
+        android:id="@+id/symbol"
+        style="@style/StockSymbolTextStyle.Widget"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="start|center_vertical"
+        tools:text="GOOG" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="horizontal"
+        android:gravity="end">
+
+        <TextView
+            android:id="@+id/price"
+            style="@style/BidPriceTextStyle.Widget"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="10sp"
+            tools:text="1000.00" />
+
+        <TextView
+            android:id="@+id/changePositive"
+            style="@style/PercentChangeTextStyle.Widget"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/percent_change_pill_green"
+            android:paddingLeft="3dp"
+            android:paddingRight="3dp"
+            android:visibility="gone"
+            tools:text="100%" />
+
+        <TextView
+            android:id="@+id/changeNegative"
+            style="@style/PercentChangeTextStyle.Widget"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/percent_change_pill_red"
+            android:paddingLeft="3dp"
+            android:paddingRight="3dp"
+            android:visibility="gone"
+            tools:text="-100.00%" />
+
+    </LinearLayout>
+
+</LinearLayout>

@@ -9,8 +9,6 @@ repositories {
 android {
     compileSdkVersion 25
 
-
-
     buildToolsVersion "25.0.2"
 
     defaultConfig {
@@ -40,6 +38,9 @@ android {
     lintOptions {
         warning 'InvalidPackage'
     }
+
+    // `return void` removes the lint error: `Not all execution paths return a value`.
+    return void
 }
 
 check {

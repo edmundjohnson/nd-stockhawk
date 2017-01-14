@@ -1,3 +1,15 @@
 <resources>
     <dimen name="activity_horizontal_margin">16dp</dimen>
+
+    <!-- widget dimensions -->
+    <!-- Note: if min version changes to <14, add a widget_dimens.xml file,
+         and move this to values-v14/dimens.xml file -->
+    <dimen name="widget_margin">0dp</dimen>
+
+    <!-- list widget dimensions -->
+    <dimen name="list_widget_default_width">180dp</dimen>
+    <dimen name="list_widget_default_height">180dp</dimen>
+    <dimen name="list_widget_min_resize_width">@dimen/list_widget_default_width</dimen>
+    <dimen name="list_widget_min_resize_height">120dp</dimen>
+
 </resources>
