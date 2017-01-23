@@ -23,6 +23,7 @@ import com.udacity.stockhawk.R;
 import com.udacity.stockhawk.data.Contract;
 import com.udacity.stockhawk.data.PrefUtils;
 import com.udacity.stockhawk.sync.QuoteSyncJob;
+import com.udacity.stockhawk.widget.ListWidgetProvider;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -73,8 +74,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             @Override
             public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
                 String symbol = adapter.getSymbolAtPosition(viewHolder.getAdapterPosition());
-                PrefUtils.removeStock(MainActivity.this, symbol);
-                getContentResolver().delete(Contract.Quote.makeUriForStock(symbol), null, null);
+                deleteStock(symbol);
             }
         }).attachToRecyclerView(stockRecyclerView);
 
@@ -124,8 +124,23 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                 Toast.makeText(this, message, Toast.LENGTH_LONG).show();
             }
 
+            // Add to the list of symbols in preferences
             PrefUtils.addStock(this, symbol);
+            // Schedule a job to fetch and display stock info
             QuoteSyncJob.syncImmediately(this);
+        }
+    }
+
+    private void deleteStock(String symbol) {
+        if (symbol != null && !symbol.isEmpty()) {
+            // Remove from the list of symbols in preferences
+            PrefUtils.removeStock(this, symbol);
+            // Remove from the database where the displayed stock info is stored
+            getContentResolver().delete(Contract.Quote.makeUriForStock(symbol),
+                    null, null);
+            // Update the widget(s). This is best done here immediately, as removing a stock
+            // does not require an internet connection.
+            ListWidgetProvider.updateWidgets(this);
         }
     }
 
@@ -154,13 +169,13 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         adapter.setCursor(null);
     }
 
-
-    private void setDisplayModeMenuItemIcon(MenuItem item) {
-        if (PrefUtils.getDisplayMode(this)
-                .equals(getString(R.string.pref_display_mode_absolute_key))) {
+    private void toggleDisplayModeMenuItemAppearance(MenuItem item) {
+        if (PrefUtils.getDisplayMode(this).equals(getString(R.string.pref_display_mode_absolute_key))) {
             item.setIcon(R.drawable.ic_percentage);
+            item.setTitle(R.string.action_change_units_to_percentage);
         } else {
             item.setIcon(R.drawable.ic_dollar);
+            item.setTitle(R.string.action_change_units_to_dollar);
         }
     }
 
@@ -168,7 +183,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main_activity_settings, menu);
         MenuItem item = menu.findItem(R.id.action_change_units);
-        setDisplayModeMenuItemIcon(item);
+        toggleDisplayModeMenuItemAppearance(item);
         return true;
     }
 
@@ -178,7 +193,10 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
         if (id == R.id.action_change_units) {
             PrefUtils.toggleDisplayMode(this);
-            setDisplayModeMenuItemIcon(item);
+            toggleDisplayModeMenuItemAppearance(item);
+            // The widget is best updated here immediately, as the change in
+            // price change format does not require an internet connection.
+            ListWidgetProvider.updateWidgets(this);
             adapter.notifyDataSetChanged();
             return true;
         }

@@ -37,10 +37,11 @@ android {
 
     lintOptions {
         warning 'InvalidPackage'
+
+        // `return void` removes the lint error: `Not all execution paths return a value`.
+        return void
     }
 
-    // `return void` removes the lint error: `Not all execution paths return a value`.
-    return void
 }
 
 check {

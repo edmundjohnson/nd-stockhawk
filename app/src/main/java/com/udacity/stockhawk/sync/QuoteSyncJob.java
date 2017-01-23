@@ -6,15 +6,18 @@ import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
 import com.udacity.stockhawk.data.Contract;
 import com.udacity.stockhawk.data.PrefUtils;
+import com.udacity.stockhawk.widget.ListWidgetProvider;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -29,8 +32,6 @@ import yahoofinance.histquotes.Interval;
 import yahoofinance.quotes.stock.StockQuote;
 
 public final class QuoteSyncJob {
-
-    public static final String ACTION_DATA_UPDATED = "com.udacity.stockhawk.ACTION_DATA_UPDATED";
 
     private static final int ONE_OFF_ID = 2;
     private static final int PERIOD = 300000;
@@ -61,6 +62,8 @@ public final class QuoteSyncJob {
             if (stockArray.length == 0) {
                 return;
             }
+
+            Set<String> symbolsToRemove = null;
 
             Map<String, Stock> quotes = YahooFinance.get(stockArray);
             Iterator<String> iterator = stockCopy.iterator();
@@ -106,6 +109,22 @@ public final class QuoteSyncJob {
                     quoteCV.put(Contract.Quote.COLUMN_HISTORY, historyBuilder.toString());
 
                     quoteCVs.add(quoteCV);
+                } else {
+                    // If no stock data was returned for the symbol (i.e. we are here) AND the
+                    // stock symbol is not in the database (i.e. there has never been stock data
+                    // for the stock), it is almost certain that the stock symbol is not a valid
+                    // stock symbol. (If the symbol is in the database, there has been stock info
+                    // for it in the past and the stock info may just be temporarily unavailable.)
+                    // In this case, add the symbol to a list of stocks to be removed from preferences.
+
+                    Set<String> symbolsInDatabase = getSymbolsInDatabase(context);
+                    Timber.d("symbolsInDatabase: " + symbolsInDatabase.toString());
+                    if (!symbolsInDatabase.contains(symbol)) {
+                        if (symbolsToRemove == null) {
+                            symbolsToRemove = new HashSet<>();
+                        }
+                        symbolsToRemove.add(symbol);
+                    }
                 }
             }
 
@@ -114,8 +133,16 @@ public final class QuoteSyncJob {
                             Contract.Quote.URI,
                             quoteCVs.toArray(new ContentValues[quoteCVs.size()]));
 
-            Intent dataUpdatedIntent = new Intent(ACTION_DATA_UPDATED);
-            context.sendBroadcast(dataUpdatedIntent);
+            // Update any widgets with the latest stock info
+            ListWidgetProvider.updateWidgets(context);
+
+            // Remove any symbols which are not valid stocks from the preferences
+            if (symbolsToRemove != null) {
+                for (String symbolToRemove : symbolsToRemove) {
+                    Timber.d("Removing symbol from preferences: " + symbolToRemove);
+                    PrefUtils.removeStock(context, symbolToRemove);
+                }
+            }
 
         } catch (IOException exception) {
             Timber.e(exception, "Error fetching stock quotes");
@@ -132,7 +159,6 @@ public final class QuoteSyncJob {
         builder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                 .setPeriodic(PERIOD)
                 .setBackoffCriteria(INITIAL_BACKOFF, JobInfo.BACKOFF_POLICY_EXPONENTIAL);
-
 
         JobScheduler scheduler = (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
 
@@ -159,18 +185,44 @@ public final class QuoteSyncJob {
 
             JobInfo.Builder builder = new JobInfo.Builder(ONE_OFF_ID, new ComponentName(context, QuoteJobService.class));
 
-
             builder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                     .setBackoffCriteria(INITIAL_BACKOFF, JobInfo.BACKOFF_POLICY_EXPONENTIAL);
-
 
             JobScheduler scheduler = (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
 
             scheduler.schedule(builder.build());
-
-
         }
     }
 
+    private static Set<String> getSymbolsInDatabase(Context context) {
+        Cursor cursor = null;
+        Set<String> symbols = null;
+
+        try {
+            cursor = context.getContentResolver().query(
+                    Contract.Quote.URI,
+                    Contract.Quote.QUOTE_COLUMNS,
+                    null,
+                    null,
+                    null);
+
+            if (cursor != null && cursor.getCount() > 0) {
+                symbols = new HashSet<>();
+                while (cursor.moveToNext()) {
+                    symbols.add(cursor.getString(Contract.Quote.POSITION_SYMBOL));
+                }
+            }
+
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+        // do this check here rather than returning earlier to ensure the cursor gets closed
+        if (symbols == null) {
+            return Collections.emptySet();
+        }
+        return symbols;
+    }
 
 }
