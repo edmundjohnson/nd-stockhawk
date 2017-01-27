@@ -92,8 +92,6 @@ public class StockAdapter extends RecyclerView.Adapter<StockAdapter.StockViewHol
         } else {
             holder.change.setText(percentage);
         }
-
-
     }
 
     @Override
@@ -147,10 +145,11 @@ public class StockAdapter extends RecyclerView.Adapter<StockAdapter.StockViewHol
         @Override
         public void onClick(View v) {
             int adapterPosition = getAdapterPosition();
-            cursor.moveToPosition(adapterPosition);
-            int symbolColumn = cursor.getColumnIndex(Contract.Quote.COLUMN_SYMBOL);
-            clickHandler.onClick(cursor.getString(symbolColumn));
-
+            if (adapterPosition != RecyclerView.NO_POSITION) {
+                cursor.moveToPosition(adapterPosition);
+                int symbolColumn = cursor.getColumnIndex(Contract.Quote.COLUMN_SYMBOL);
+                clickHandler.onClick(cursor.getString(symbolColumn));
+            }
         }
 
     }

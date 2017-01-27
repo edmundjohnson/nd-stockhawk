@@ -1,6 +1,7 @@
 package com.udacity.stockhawk.ui;
 
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -43,11 +44,6 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     private StockAdapter adapter;
 
     @Override
-    public void onClick(String symbol) {
-        Timber.d("Symbol clicked: %s", symbol);
-    }
-
-    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
@@ -78,14 +74,6 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             }
         }).attachToRecyclerView(stockRecyclerView);
 
-
-    }
-
-    private boolean networkUp() {
-        ConnectivityManager cm =
-                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = cm.getActiveNetworkInfo();
-        return networkInfo != null && networkInfo.isConnectedOrConnecting();
     }
 
     @Override
@@ -110,7 +98,17 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         }
     }
 
-    public void button(View view) {
+    @Override
+    public void onClick(String symbol) {
+        Timber.d("Symbol clicked: %s", symbol);
+
+        // Invoke the stock activity, passing in the URI of the stock to display
+        Intent intent = new Intent(this, StockActivity.class);
+        intent.setData(Contract.Quote.makeUriForStock(symbol));
+        startActivity(intent);
+    }
+
+    public void button(@SuppressWarnings("UnusedParameters") View view) {
         new AddStockDialog().show(getFragmentManager(), "StockDialogFragment");
     }
 
@@ -169,16 +167,6 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         adapter.setCursor(null);
     }
 
-    private void toggleDisplayModeMenuItemAppearance(MenuItem item) {
-        if (PrefUtils.getDisplayMode(this).equals(getString(R.string.pref_display_mode_absolute_key))) {
-            item.setIcon(R.drawable.ic_percentage);
-            item.setTitle(R.string.action_change_units_to_percentage);
-        } else {
-            item.setIcon(R.drawable.ic_dollar);
-            item.setTitle(R.string.action_change_units_to_dollar);
-        }
-    }
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main_activity_settings, menu);
@@ -202,4 +190,22 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         }
         return super.onOptionsItemSelected(item);
     }
+
+    private void toggleDisplayModeMenuItemAppearance(MenuItem item) {
+        if (PrefUtils.getDisplayMode(this).equals(getString(R.string.pref_display_mode_absolute_key))) {
+            item.setIcon(R.drawable.ic_percentage);
+            item.setTitle(R.string.action_change_units_to_percentage);
+        } else {
+            item.setIcon(R.drawable.ic_dollar);
+            item.setTitle(R.string.action_change_units_to_dollar);
+        }
+    }
+
+    private boolean networkUp() {
+        ConnectivityManager cm =
+                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = cm.getActiveNetworkInfo();
+        return networkInfo != null && networkInfo.isConnectedOrConnecting();
+    }
+
 }

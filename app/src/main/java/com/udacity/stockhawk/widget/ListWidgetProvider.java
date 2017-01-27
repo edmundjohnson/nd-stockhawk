@@ -12,6 +12,7 @@ import android.widget.RemoteViews;
 
 import com.udacity.stockhawk.ui.MainActivity;
 import com.udacity.stockhawk.R;
+import com.udacity.stockhawk.ui.StockActivity;
 
 /**
  * Provider for a scrollable stock list widget.
@@ -40,7 +41,8 @@ public class ListWidgetProvider extends AppWidgetProvider {
 //            } else {
 //                setRemoteAdapterV11(context, views);
 //            }
-            Intent clickIntentTemplate = new Intent(context, MainActivity.class);
+            // If a list item is clicked on, launch the StockActivity
+            Intent clickIntentTemplate = new Intent(context, StockActivity.class);
             PendingIntent clickPendingIntentTemplate = TaskStackBuilder.create(context)
                     .addNextIntentWithParentStack(clickIntentTemplate)
                     .getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);

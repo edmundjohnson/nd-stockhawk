@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -62,18 +61,25 @@ public final class QuoteSyncJob {
             if (stockArray.length == 0) {
                 return;
             }
-
-            Set<String> symbolsToRemove = null;
-
             Map<String, Stock> quotes = YahooFinance.get(stockArray);
-            Iterator<String> iterator = stockCopy.iterator();
-
             Timber.d(quotes.toString());
 
+            Set<String> symbolsToRemove = null;
             ArrayList<ContentValues> quoteCVs = new ArrayList<>();
 
-            while (iterator.hasNext()) {
-                String symbol = iterator.next();
+            // The stock preferences may have been updated in a different thread,
+            // while obtaining the stock info from Yahoo Finance,
+            // so get the latest preference values here
+            Set<String> stockPrefNew = PrefUtils.getStocks(context);
+
+            for (String symbol : stockCopy) {
+
+                // do nothing if the stock was removed from preferences while its data was
+                // being fetched from Yahoo Finance
+                if (!stockPrefNew.contains(symbol)) {
+                    continue;
+                }
+
                 Stock stock = quotes.get(symbol);
                 StockQuote quote = stock.getQuote();
 

@@ -15,11 +15,20 @@
         android:theme="@style/AppTheme"
         android:supportsRtl="true"
         tools:ignore="GoogleAppIndexingWarning">
+
         <activity android:name=".ui.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".ui.StockActivity"
+            android:parentActivityName=".ui.MainActivity" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
             </intent-filter>
         </activity>
 
@@ -55,8 +64,6 @@
             android:enabled="true"
             android:exported="true"
             android:permission="android.permission.BIND_JOB_SERVICE" />
-
-
 
     </application>
 

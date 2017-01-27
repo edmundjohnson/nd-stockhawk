@@ -96,10 +96,6 @@ public class ListWidgetRemoteViewsService extends RemoteViewsService {
                 float rawAbsoluteChange = cursor.getFloat(Contract.Quote.POSITION_ABSOLUTE_CHANGE);
                 float percentageChange = cursor.getFloat(Contract.Quote.POSITION_PERCENTAGE_CHANGE);
 
-                //String change = dollarFormatWithPlus.format(rawAbsoluteChange);
-                //String percentage = percentageFormat.format(percentageChange / 100);
-
-// TODO: When PrefUtils.getDisplayMode(...) changes, update widget
                 Context context = getBaseContext();
 
                 String displayedChange;
@@ -123,7 +119,8 @@ public class ListWidgetRemoteViewsService extends RemoteViewsService {
                     views.setViewVisibility(R.id.changeNegative, VISIBLE);
                 }
 
-                // TODO: click on symbol -> detail (history graph?) for symbol
+                // If a list item is clicked on, pass the URI for the selected stock to the
+                // launched activity
                 final Intent fillInIntent = new Intent();
                 Uri stockUri = Contract.Quote.makeUriForStock(symbol);
                 fillInIntent.setData(stockUri);
