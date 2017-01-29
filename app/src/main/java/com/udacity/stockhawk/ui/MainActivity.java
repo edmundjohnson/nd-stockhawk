@@ -89,7 +89,6 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             swipeRefreshLayout.setRefreshing(false);
             Toast.makeText(this, R.string.toast_no_connectivity, Toast.LENGTH_LONG).show();
         } else if (PrefUtils.getStocks(this).size() == 0) {
-            Timber.d("WHYAREWEHERE");
             swipeRefreshLayout.setRefreshing(false);
             error.setText(getString(R.string.error_no_stocks));
             error.setVisibility(View.VISIBLE);
@@ -136,9 +135,14 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             // Remove from the database where the displayed stock info is stored
             getContentResolver().delete(Contract.Quote.makeUriForStock(symbol),
                     null, null);
+
             // Update the widget(s). This is best done here immediately, as removing a stock
             // does not require an internet connection.
             ListWidgetProvider.updateWidgets(this);
+            // If the only displayed item is being deleted, display the appropriate message
+            if (stockRecyclerView.getAdapter().getItemCount() <= 1) {
+                onRefresh();
+            }
         }
     }
 
