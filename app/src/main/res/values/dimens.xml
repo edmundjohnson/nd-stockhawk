@@ -1,6 +1,13 @@
 <resources>
     <dimen name="activity_horizontal_margin">16dp</dimen>
 
+    <!-- stock detail screen dimensions -->
+    <dimen name="stock_detail_top">16dp</dimen>
+
+    <!-- chart dimensions -->
+    <dimen name="chart_margin_top">16dp</dimen>
+    <dimen name="chart_margin_bottom">32dp</dimen>
+
     <!-- widget dimensions -->
     <!-- Note: if min version changes to <14, add a widget_dimens.xml file,
          and move this to values-v14/dimens.xml file -->

@@ -8,23 +8,21 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 
+import com.db.chart.model.LineSet;
+import com.db.chart.view.LineChartView;
 import com.udacity.stockhawk.R;
 import com.udacity.stockhawk.data.Contract;
 import com.udacity.stockhawk.data.PrefUtils;
 import com.udacity.stockhawk.widget.ListWidgetProvider;
 
-import java.math.BigDecimal;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
+import java.util.Locale;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import timber.log.Timber;
-
-import static android.icu.text.RelativeDateTimeFormatter.RelativeUnit.WEEKS;
 
 /**
  * The activity class for the stock screen.
@@ -32,7 +30,8 @@ import static android.icu.text.RelativeDateTimeFormatter.RelativeUnit.WEEKS;
  */
 public class StockActivity extends AppCompatActivity {
 
-    private static final int WEEKS_PER_YEAR = 52;
+    private static final int WEEKS_ON_CHART_DEFAULT = 52;
+
     private Uri stockUri;
 
     private static final DecimalFormat dollarFormatWithPlus;
@@ -48,8 +47,16 @@ public class StockActivity extends AppCompatActivity {
     @BindView(R.id.change)
     TextView change;
 
-    @BindView(R.id.history)
-    TextView history;
+    @BindView(R.id.stockChart)
+    LineChartView stockChart;
+
+    /** The maximum value of the stock price in the period displayed. */
+    private float mMaxPrice;
+    /** The minimum value of the stock price in the period displayed. */
+    private float mMinPrice;
+
+//    @BindView(R.id.history)
+//    TextView history;
 
     static {
         dollarFormat = StockAdapter.getDollarFormat();
@@ -142,6 +149,8 @@ public class StockActivity extends AppCompatActivity {
             if (cursor != null && cursor.getCount() > 0) {
                 cursor.moveToFirst();
 
+                // Display the current stock price and today's change
+
                 symbol.setText(cursor.getString(Contract.Quote.POSITION_SYMBOL));
                 price.setText(dollarFormat.format(cursor.getFloat(Contract.Quote.POSITION_PRICE)));
 
@@ -164,12 +173,23 @@ public class StockActivity extends AppCompatActivity {
                     change.setText(percentageChange);
                 }
 
+                // Display the stock price history
                 String strHistory = cursor.getString(Contract.Quote.POSITION_HISTORY);
-                history.setText(strHistory);
+                LineSet historicPriceData = getHistoricPriceData(strHistory);
+                stockChart.addData(historicPriceData);
 
-                List<HistoricPrice> historicPrices = getHistoricPrices(strHistory);
-                String breakpoint = "s";
+                // Set y axis range to the range of values
+                int yAxisMin = (int) Math.floor(mMinPrice);
+                int yAxisMax = (int) Math.ceil(mMaxPrice);
+                // yAxisStep is the value difference between labels,
+                // calculate a value which gives us 8 or 9 labels
+                int yAxisStep = Math.max((8 + yAxisMax - yAxisMin) / 8, 1);
+                // max must be an exact number of steps greater than min
+                int numberOfLabels = (yAxisMax - yAxisMin) / yAxisStep;
+                yAxisMax = yAxisMin + (yAxisStep * (numberOfLabels + 1));
+                stockChart.setAxisBorderValues(yAxisMin, yAxisMax, yAxisStep);
 
+                stockChart.show();
             }
         } finally {
             if (cursor != null) {
@@ -178,55 +198,131 @@ public class StockActivity extends AppCompatActivity {
         }
     }
 
-    private List<HistoricPrice> getHistoricPrices(String history) {
-        if (history == null) {
-            return Collections.emptyList();
+    /**
+     * Returns a LineSet of historic price data corresponding to a stock's history as stored in the
+     * database as a String
+     * @param history the history as a String
+     * @return a list of historic prices corresponding to the history
+     */
+    private LineSet getHistoricPriceData(String history) {
+
+        LineSet historicPriceData = new LineSet();
+        historicPriceData.setColor(getResources().getColor(R.color.chartLine));
+
+        if (history == null || history.length() == 0) {
+            return historicPriceData;
         }
-        List<HistoricPrice> historicPrices = new ArrayList<>();
 
         String[] strDataPoints = history.split("\n");
         String[] strDataPointSplit;
-        for (String strDataPoint : strDataPoints) {
+        int dataPointsOnChart = Math.min(strDataPoints.length, WEEKS_ON_CHART_DEFAULT);
+        // The history is most-recent first, so the order must be reversed
+        for (int i = dataPointsOnChart - 1; i >= 0; i--) {
+            String strDataPoint = strDataPoints[i];
             strDataPointSplit = strDataPoint.split(", ");
             if (strDataPointSplit.length == 2) {
                 String strMillis = strDataPointSplit[0];
                 String strPrice = strDataPointSplit[1];
 
                 try {
-                    HistoricPrice historicPrice = new HistoricPrice(
-                            Long.valueOf(strMillis),
-                            new BigDecimal(strPrice)
-                    );
-                    historicPrices.add(historicPrice);
+                    String label = getLabel(Long.valueOf(strMillis));
+                    float value = Float.valueOf(strPrice);
+
+                    // Update the max and min value if they are breached
+                    if (i == dataPointsOnChart - 1) {
+                        mMaxPrice = value;
+                        mMinPrice = value;
+                    } else {
+                        if (mMaxPrice < value) {
+                            mMaxPrice = value;
+                        }
+                        if (mMinPrice > value) {
+                            mMinPrice = value;
+                        }
+                    }
+
+                    historicPriceData.addPoint(label, value);
                 } catch (Exception e) {
                     Timber.d("Error creating HistoricPrice", e);
                 }
             }
         }
 
-        return historicPrices;
+        return historicPriceData;
     }
 
-    private class HistoricPrice {
-        // see GregorianCalendar.getTimeInMillis()
-        long timeInMillis;
-        BigDecimal price;
+    private String getLabel(long millis) {
+        Calendar cal = GregorianCalendar.getInstance();
+        cal.setTimeInMillis(millis);
 
-        public HistoricPrice(long timeInMillis, BigDecimal price) {
-            this.timeInMillis = timeInMillis;
-            this.price = price;
+        //noinspection WrongConstant
+        if (isInFirstWeekOfMonth(cal)) {
+            return cal.getDisplayName(Calendar.MONTH, Calendar.SHORT, Locale.getDefault());
+        } else {
+            return "";
         }
-
-        // Getters
-
-        public long getTimeInMillis() {
-            return timeInMillis;
-        }
-
-        public BigDecimal getPrice() {
-            return price;
-        }
-
     }
+
+    private boolean isInFirstWeekOfMonth(Calendar cal) {
+        int day = cal.get(Calendar.DAY_OF_MONTH);
+        return 1 <= day && day <= 7;
+    }
+
+//    /**
+//     * Returns a list of HistoricPrices corresponding to a stock's history as stored in the
+//     * database as a String
+//     * @param history the history as a String
+//     * @return a list of historic prices corresponding to the history
+//     */
+//    private List<HistoricPrice> getHistoricPrices(String history) {
+//        if (history == null) {
+//            return Collections.emptyList();
+//        }
+//        List<HistoricPrice> historicPrices = new ArrayList<>();
+//
+//        String[] strDataPoints = history.split("\n");
+//        String[] strDataPointSplit;
+//        for (String strDataPoint : strDataPoints) {
+//            strDataPointSplit = strDataPoint.split(", ");
+//            if (strDataPointSplit.length == 2) {
+//                String strMillis = strDataPointSplit[0];
+//                String strPrice = strDataPointSplit[1];
+//
+//                try {
+//                    HistoricPrice historicPrice = new HistoricPrice(
+//                            Long.valueOf(strMillis),
+//                            new BigDecimal(strPrice)
+//                    );
+//                    historicPrices.add(historicPrice);
+//                } catch (Exception e) {
+//                    Timber.d("Error creating HistoricPrice", e);
+//                }
+//            }
+//        }
+//
+//        return historicPrices;
+//    }
+
+//    private class HistoricPrice {
+//        // see GregorianCalendar.getTimeInMillis()
+//        long timeInMillis;
+//        BigDecimal price;
+//
+//        public HistoricPrice(long timeInMillis, BigDecimal price) {
+//            this.timeInMillis = timeInMillis;
+//            this.price = price;
+//        }
+//
+//        // Getters
+//
+//        public long getTimeInMillis() {
+//            return timeInMillis;
+//        }
+//
+//        public BigDecimal getPrice() {
+//            return price;
+//        }
+//
+//    }
 
 }

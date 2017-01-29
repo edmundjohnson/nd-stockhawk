@@ -8,5 +8,8 @@
     <color name="material_red_700">#D50000</color>
     <color name="material_green_700">#00C853</color>
 
+    <color name="chartBackground">#D0D0D0</color>
+    <color name="chartLine">@color/colorPrimary</color>
+
     <color name="widgetListBackground">#404040</color>
 </resources>

@@ -14,7 +14,6 @@ import com.udacity.stockhawk.data.Contract;
 import com.udacity.stockhawk.data.PrefUtils;
 import com.udacity.stockhawk.widget.ListWidgetProvider;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -150,7 +149,7 @@ public final class QuoteSyncJob {
                 }
             }
 
-        } catch (IOException exception) {
+        } catch (Exception exception) {
             Timber.e(exception, "Error fetching stock quotes");
         }
     }

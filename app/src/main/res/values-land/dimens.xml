@@ -1,0 +1,8 @@
+<resources>
+
+    <!-- chart dimensions -->
+    <dimen name="chart_margin_top">0dp</dimen>
+    <dimen name="chart_margin_bottom">16dp</dimen>
+    <dimen name="stock_detail_top">0dp</dimen>
+
+</resources>
